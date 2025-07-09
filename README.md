@@ -1,40 +1,60 @@
-![insafweb-19-03-2020-xss_cross-site_bg](https://user-images.githubusercontent.com/60549548/165462787-dcc49017-8876-45de-ac01-9e3a7c79dd1a.jpg)
+# 🌸 **VulnBloom** — Advanced XSS Scanner
 
-<a href="/Lu3ky13/"><img src="https://camo.githubusercontent.com/f5054ffcd4245c10d3ec85ef059e07aacf787b560f83ad4aec2236364437d097/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f636f6e747269627574696f6e732d77656c636f6d652d627269676874677265656e2e7376673f7374796c653d666c6174" data-canonical-src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" style="max-width: 100%;"></a> <br>
+![VulnBloom Banner](https://user-images.githubusercontent.com/60549548/165462787-dcc49017-8876-45de-ac01-9e3a7c79dd1a.jpg)
 
-                                 🐛   🐛   VulnBloom 🐛 🐛 
-   
-######  <g-emoji class="g-emoji" alias="cd" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f4bf.png">💿</g-emoji> VulnBloom finds XSS vulnerabilities on large websites by leveraging archive.org to discover thousands of historical URLs, then tests each with your payloads. It features colorful output, progress indicators, deduplication, and XSS type detection. <g-emoji class="g-emoji" alias="cd" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f4bf.png">💿</g-emoji>
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.7%2B-blue?logo=python" />
+  <img src="https://img.shields.io/badge/platform-linux%20%7C%20windows-lightgrey" />
+  <img src="https://img.shields.io/badge/license-MIT-green" />
+  <img src="https://img.shields.io/badge/contributions-welcome-brightgreen" />
+</p>
 
-<h1><g-emoji class="g-emoji" alias="ledger" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f4d2.png">📒</g-emoji> How it works <g-emoji class="g-emoji" alias="ledger" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f4d2.png">📒</g-emoji> </h1>
+<p align="center">
+  <b>VulnBloom</b> is a powerful, colorful, and modern XSS scanner for bug bounty hunters and security professionals.
+  <br>
+  <i>Finds XSS vulnerabilities by leveraging historical URLs, subdomain enumeration, and custom payloads.</i>
+</p>
 
-- Download the script (requires Python 3):
-  ```bash
-  python3 fagun_xss.py
-  ```
-- Create a file named `payloads.txt` and add your XSS payloads (one per line).
-- Run the tool:
-  ```bash
-  python3 fagun_xss.py
-  ```
+---
+
+## 🌟 **Features**
+
+| 🚀 Feature                        | ✅ Description                                                                 |
+|-----------------------------------|-------------------------------------------------------------------------------|
+| 🔎 Subdomain Enumeration          | Collects subdomains from crt.sh, hackertarget, DNS brute-force, and more      |
+| 🕰️ Historical URL Collection      | Fetches thousands of URLs from archive.org and urlscan.io                     |
+| 🎨 Colorful CLI                   | Beautiful, animated output with progress bars and color coding                |
+| 🧹 Deduplication & Validation     | Removes duplicate/invalid subdomains and URLs, strict domain matching         |
+| 💉 Custom Payloads                | Loads your XSS payloads from `payloads.txt`                                   |
+| ⚡ Multi-threaded Scanning         | Fast, concurrent XSS testing                                                  |
+| 🧪 XSS Type Detection             | Detects reflected and path-based XSS, context-aware reporting                 |
+| 📊 Real-time HTML Report          | Generates a live, clickable, and detailed HTML report                         |
+| 🔄 Real-time Result Saving        | Saves results as soon as they are found                                       |
+| 📈 Progress Tracking              | Shows scan progress for every URL and payload                                 |
+
+---
+
+## 🚀 **Quick Start**
+
+```bash
+# 1. Clone the repo
+$ git clone https://github.com/fagun18/VulnBloom.git
+$ cd VulnBloom
+
+# 2. Add your payloads
+$ nano payloads.txt  # or use your favorite editor
+
+# 3. Run the scanner
+$ python3 VulnBloomXSS.py
+```
+
 - Enter your target domain when prompted (e.g., `example.com`).
 
-### Features
-- Collects subdomains from multiple sources (crt.sh, hackertarget, DNS brute-force)
-- Fetches historical URLs from archive.org for each subdomain
-- Colorful, animated CLI output with progress indicators
-- Deduplicates and validates subdomains and URLs
-- Loads payloads from `payloads.txt`
-- Scans for XSS vulnerabilities and detects:
-  - Reflected XSS
-  - Path-based XSS
-  - (Notes for stored/DOM-based XSS)
-- Generates a beautiful HTML report with clickable vulnerable URLs and XSS type
-- Real-time result saving and progress tracking
+---
 
-### Example Output
+## 🖥️ **Example Output**
 
-```
+```shell
 1/48 - example.com
 [+] Fetching URLs for example.com...  - 5 URLs found for example.com
 ...
@@ -46,7 +66,9 @@
 [+] Total payloads loaded: 3000
 ```
 
-### HTML Report
+---
+
+## 📑 **HTML Report**
 - Only valid XSS vulnerabilities are listed
 - Each finding is clickable and labeled with its XSS type
 - Notes for stored and DOM-based XSS are included
@@ -54,18 +76,29 @@
 
 ---
 
-```
-          \\|///
-        \\  - -  //
-         (  @ @  )
-  -----oOOo-(_)-oOOo----------
- |                           |
- |   VulnBloom by @Fagun     |
- |                           |
- |                           |
-  ----------------------------
+## 🧠 **How It Works**
 
- [ https://twitter.com/fagun18 ]
+1. **Subdomain Enumeration:**
+   - Uses multiple sources to find as many subdomains as possible.
+2. **Historical URL Collection:**
+   - Gathers thousands of URLs from archive.org and urlscan.io for each subdomain.
+3. **Payload Injection:**
+   - Loads your custom payloads from `payloads.txt` and injects them into URLs.
+4. **XSS Scanning:**
+   - Tests each URL+payload combo for reflected and path-based XSS.
+5. **Real-time Reporting:**
+   - Saves and updates a beautiful HTML report as soon as results are found.
 
-Enter your url:- testphp.vulnweb.com
-```
+---
+
+## 📝 **Credits & Contact**
+
+- Developed by [@Fagun](https://twitter.com/fagun18)
+- Connect on [LinkedIn](https://www.linkedin.com/in/mejbaur/)
+- Contributions, issues, and PRs are welcome!
+
+---
+
+<p align="center">
+  <b>Happy Hacking! 🌸</b>
+</p>
