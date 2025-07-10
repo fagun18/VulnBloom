@@ -655,8 +655,15 @@ def enumerate_subdomains_dns(domain):
                 elapsed = time.time() - start_time
                 rate = idx / elapsed if elapsed > 0 else 0
                 remaining = total - idx
-                eta = remaining / rate if rate > 0 else 0
-                print(Fore.CYAN + f"[DNS Brute] Checked {idx}/{total} ({idx*100//total}%) - {len(subdomains)} found - ETA: {int(eta)}s" + Fore.RESET, end='\r' if idx != total else '\n')
+                eta = int(remaining / rate) if rate > 0 else 0
+                # Format ETA as H:M:S
+                hours = eta // 3600
+                minutes = (eta % 3600) // 60
+                seconds = eta % 60
+                eta_str = f"{hours} hour{'s' if hours != 1 else ''} " if hours else ""
+                eta_str += f"{minutes} minute{'s' if minutes != 1 else ''} " if minutes or hours else ""
+                eta_str += f"{seconds} second{'s' if seconds != 1 else ''}"
+                print(Fore.CYAN + f"[DNS Brute] Checked {idx}/{total} ({idx*100//total}%) - {len(subdomains)} found - ETA: {eta_str}" + Fore.RESET, end='\r' if idx != total else '\n')
         print()  # Newline after progress
     except KeyboardInterrupt:
         print(Fore.MAGENTA + f"\n[!] DNS brute-force interrupted by user. {len(subdomains)} subdomains found so far." + Fore.RESET)
