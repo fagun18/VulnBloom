@@ -38,6 +38,12 @@
 
 ---
 
+<div align="center">
+  <img src="xss.png" alt="XSS Demo" width="500"/>
+</div>
+
+---
+
 ## 🚀 **Quick Start**
 
 ```bash
