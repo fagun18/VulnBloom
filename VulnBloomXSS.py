@@ -17,6 +17,7 @@ import logging
 from datetime import datetime
 import urllib3
 import warnings
+import subprocess
 
 # Suppress SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -625,20 +626,86 @@ def enumerate_subdomains_anubisdb(domain, retries=2):
     return set()
 
 def enumerate_subdomains_dns(domain):
-    # Small built-in wordlist for demonstration
-    wordlist = [
-        'www', 'mail', 'ftp', 'test', 'dev', 'admin', 'portal', 'webmail', 'ns1', 'ns2', 'blog', 'staging', 'api', 'm', 'shop', 'static', 'cdn', 'img', 'beta', 'demo', 'vpn', 'cpanel', 'secure', 'server', 'db', 'app', 'forum', 'news', 'support', 'mobile', 'old', 'new', 'auth', 'login', 'files', 'download', 'upload', 'docs', 'wiki', 'dashboard', 'monitor', 'status', 'gateway', 'proxy', 'smtp', 'pop', 'imap', 'test1', 'test2', 'test3', 'dev1', 'dev2', 'dev3'
-    ]
+    # Try to load wordlist from subs-dnsbruter.txt, fallback to built-in list
+    import time
+    wordlist = []
+    try:
+        with open('subs-dnsbruter.txt', 'r', encoding='utf-8', errors='ignore') as f:
+            wordlist = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+        print(Fore.CYAN + f"[DNS Brute] Loaded {len(wordlist)} subdomain prefixes from subs-dnsbruter.txt" + Fore.RESET)
+    except Exception as e:
+        print(Fore.YELLOW + f"[DNS Brute] Could not load subs-dnsbruter.txt, using built-in list. Reason: {e}" + Fore.RESET)
+        wordlist = [
+            'www', 'mail', 'ftp', 'test', 'dev', 'admin', 'portal', 'webmail', 'ns1', 'ns2', 'blog', 'staging', 'api', 'm', 'shop', 'static', 'cdn', 'img', 'beta', 'demo', 'vpn', 'cpanel', 'secure', 'server', 'db', 'app', 'forum', 'news', 'support', 'mobile', 'old', 'new', 'auth', 'login', 'files', 'download', 'upload', 'docs', 'wiki', 'dashboard', 'monitor', 'status', 'gateway', 'proxy', 'smtp', 'pop', 'imap', 'test1', 'test2', 'test3', 'dev1', 'dev2', 'dev3'
+        ]
     import socket
     subdomains = set()
-    for prefix in wordlist:
-        sub = f"{prefix}.{domain}"
-        try:
-            socket.gethostbyname(sub)
-            subdomains.add(sub)
-        except Exception:
-            continue
+    total = len(wordlist)
+    start_time = time.time()
+    try:
+        for idx, prefix in enumerate(wordlist, 1):
+            sub = f"{prefix}.{domain}"
+            try:
+                socket.gethostbyname(sub)
+                subdomains.add(sub)
+            except Exception:
+                pass
+            # Progress bar every 1000 checks or at the end
+            if idx % 1000 == 0 or idx == total:
+                elapsed = time.time() - start_time
+                rate = idx / elapsed if elapsed > 0 else 0
+                remaining = total - idx
+                eta = remaining / rate if rate > 0 else 0
+                print(Fore.CYAN + f"[DNS Brute] Checked {idx}/{total} ({idx*100//total}%) - {len(subdomains)} found - ETA: {int(eta)}s" + Fore.RESET, end='\r' if idx != total else '\n')
+        print()  # Newline after progress
+    except KeyboardInterrupt:
+        print(Fore.MAGENTA + f"\n[!] DNS brute-force interrupted by user. {len(subdomains)} subdomains found so far." + Fore.RESET)
+        return subdomains
     return subdomains
+
+def enumerate_subdomains_amass(domain):
+    """
+    Enumerate subdomains using Amass (if installed).
+    """
+    try:
+        result = subprocess.run([
+            'amass', 'enum', '-d', domain, '-o', '-', '-norecursive', '-noalts'
+        ], capture_output=True, text=True, timeout=120)
+        if result.returncode == 0:
+            subs = set(line.strip() for line in result.stdout.splitlines() if line.strip())
+            print(Fore.CYAN + f"[Amass] Found {len(subs)} subdomains" + Fore.RESET)
+            return subs
+        else:
+            print(Fore.YELLOW + f"[Amass] Non-zero exit code: {result.returncode}" + Fore.RESET)
+            return set()
+    except FileNotFoundError:
+        print(Fore.YELLOW + "[Amass] Not installed, skipping Amass enumeration." + Fore.RESET)
+        return set()
+    except Exception as e:
+        print(Fore.YELLOW + f"[Amass] Error: {e}" + Fore.RESET)
+        return set()
+
+def enumerate_subdomains_subfinder(domain):
+    """
+    Enumerate subdomains using Subfinder (if installed).
+    """
+    try:
+        result = subprocess.run([
+            'subfinder', '-d', domain, '-silent'
+        ], capture_output=True, text=True, timeout=120)
+        if result.returncode == 0:
+            subs = set(line.strip() for line in result.stdout.splitlines() if line.strip())
+            print(Fore.CYAN + f"[Subfinder] Found {len(subs)} subdomains" + Fore.RESET)
+            return subs
+        else:
+            print(Fore.YELLOW + f"[Subfinder] Non-zero exit code: {result.returncode}" + Fore.RESET)
+            return set()
+    except FileNotFoundError:
+        print(Fore.YELLOW + "[Subfinder] Not installed, skipping Subfinder enumeration." + Fore.RESET)
+        return set()
+    except Exception as e:
+        print(Fore.YELLOW + f"[Subfinder] Error: {e}" + Fore.RESET)
+        return set()
 
 def is_valid_subdomain(sub, domain=None):
     # Basic check: no @, no spaces, only valid domain chars
@@ -657,7 +724,7 @@ def is_valid_subdomain(sub, domain=None):
 
 def enumerate_subdomains(domain):
     """
-    Enumerate subdomains using multiple sources.
+    Enumerate subdomains using multiple sources, including Amass and Subfinder if available.
     """
     print(Fore.CYAN + f"[+] Collecting subdomains from multiple sources..." + Fore.RESET)
     all_subdomains = set()
@@ -667,6 +734,8 @@ def enumerate_subdomains(domain):
     
     # Try each source with better error handling
     sources = [
+        ("Amass", lambda: enumerate_subdomains_amass(domain)),
+        ("Subfinder", lambda: enumerate_subdomains_subfinder(domain)),
         ("crt.sh", lambda: enumerate_subdomains_crtsh(domain)),
         ("hackertarget", lambda: enumerate_subdomains_hackertarget(domain)),
         ("AlienVault OTX", lambda: enumerate_subdomains_alienvault(domain)),
@@ -688,6 +757,7 @@ def enumerate_subdomains(domain):
                 print(Fore.YELLOW + f"  - 0 from {source_name}" + Fore.RESET)
         except Exception as e:
             print(Fore.RED + f"  ✗ Error from {source_name}: {str(e)}" + Fore.RESET)
+            print(Fore.YELLOW + f"    [!] Network or API error. Please check your internet connection or proxy settings if this persists." + Fore.RESET)
             log_error(f"Subdomain enumeration {source_name}", e)
     
     # Filter and validate subdomains
@@ -695,6 +765,9 @@ def enumerate_subdomains(domain):
     for sub in all_subdomains:
         if is_valid_subdomain(sub, domain):
             valid_subdomains.append(sub)
+    
+    if not valid_subdomains:
+        print(Fore.RED + "[!] No subdomains found from any source. Please check your network connection, DNS, or try again later." + Fore.RESET)
     
     return sorted(set(valid_subdomains))
 
@@ -1133,19 +1206,40 @@ def clear_scan_state():
         os.remove(STATE_FILE)
 
 def main(max_workers=8):
-    # Resume or new scan prompt
-    state = None
-    if os.path.exists(STATE_FILE):
-        print(Fore.YELLOW + '[!] Previous scan state detected.' + Fore.RESET)
-        print('1. Resume previous scan')
-        print('2. Start new scan')
-        choice = input('Enter choice (1/2): ').strip()
-        if choice == '1':
+    # Main menu
+    while True:
+        print(Fore.MAGENTA + "\n==== VulnBloom Main Menu ====" + Fore.RESET)
+        print("1. Resume previous scan")
+        print("2. Start new scan")
+        print("3. Update Tool")
+        print("4. Exit")
+        choice = input("Enter choice (1/2/3/4): ").strip()
+        if choice == '1' and os.path.exists(STATE_FILE):
             state = load_scan_state()
             print(Fore.CYAN + '[+] Resuming previous scan...' + Fore.RESET)
-        else:
+            break
+        elif choice == '2':
             clear_scan_state()
             print(Fore.CYAN + '[+] Starting new scan...' + Fore.RESET)
+            state = None
+            break
+        elif choice == '3':
+            print(Fore.CYAN + '[+] Updating tool from git...' + Fore.RESET)
+            try:
+                result = subprocess.run(['git', 'pull'], capture_output=True, text=True)
+                print(result.stdout)
+                if result.stderr:
+                    print(Fore.YELLOW + result.stderr + Fore.RESET)
+                print(Fore.CYAN + '[+] Restarting tool...' + Fore.RESET)
+                python = sys.executable
+                os.execl(python, python, *sys.argv)
+            except Exception as e:
+                print(Fore.RED + f'[!] Update failed: {e}' + Fore.RESET)
+        elif choice == '4':
+            print(Fore.CYAN + 'Exiting. Goodbye!' + Fore.RESET)
+            sys.exit(0)
+        else:
+            print(Fore.YELLOW + '[!] Invalid choice or no previous scan to resume.' + Fore.RESET)
 
     if state:
         # Load previous state
