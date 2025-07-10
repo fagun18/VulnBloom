@@ -21,7 +21,7 @@
 
 | 🚀 Feature                        | ✅ Description                                                                 |
 |-----------------------------------|-------------------------------------------------------------------------------|
-| 🔎 Subdomain Enumeration          | Collects subdomains from crt.sh, hackertarget, DNS brute-force, and more      |
+| 🔎 Subdomain Enumeration          | Collects subdomains from crt.sh, hackertarget, DNS brute-force, Amass, Subfinder, and more |
 | 🕰️ Historical URL Collection      | Fetches thousands of URLs from archive.org and urlscan.io                     |
 | 🎨 Colorful CLI                   | Beautiful, animated output with progress bars and color coding                |
 | 🧹 Deduplication & Validation     | Removes duplicate/invalid subdomains and URLs, strict domain matching         |
@@ -32,6 +32,8 @@
 | 🔄 **Resume Functionality**       | **NEW!** Resume scans from where they left off after interruption             |
 | 🛡️ **Error Handling & Logging**   | **NEW!** Comprehensive error logging and graceful failure handling             |
 | 📈 Progress Tracking              | Shows scan progress for every URL and payload                                 |
+| 🧰 **DNS Brute-force Progress**   | **NEW!** Live progress bar, ETA, and interrupt support for DNS brute-force    |
+| 🖥️ **Main Menu & Update Tool**    | **NEW!** User-friendly menu with 'Update Tool' option and clean Ctrl+C exit   |
 | 🎯 **Command-Line Arguments**     | **NEW!** Control thread count and other options via CLI                       |
 
 ---
@@ -46,14 +48,36 @@ $ cd VulnBloom
 # 2. Add your payloads
 $ nano payloads.txt  # or use your favorite editor
 
-# 3. Run the scanner
+# 3. (Optional) Add a big DNS wordlist as subs-dnsbruter.txt for maximum subdomain coverage
+
+# 4. Run the scanner
 $ python VulnBloomXSS.py
 
-# 4. Or with custom thread count (recommended for low memory)
+# 5. Or with custom thread count (recommended for low memory)
 $ python VulnBloomXSS.py --threads 4
 ```
 
 - Enter your target domain when prompted (e.g., `example.com`).
+- Use the main menu to resume, start new, update the tool, or exit.
+
+---
+
+## 🖥️ **Main Menu & Update Tool**
+
+- On launch, you'll see a menu:
+  - Resume previous scan
+  - Start new scan
+  - Update Tool (pulls latest from git and restarts automatically)
+  - Exit
+- Press Ctrl+C at the menu for a clean exit (no traceback).
+
+---
+
+## 🧰 **DNS Brute-force Progress & Interrupt**
+
+- When using DNS brute-force (with `subs-dnsbruter.txt`), you'll see a live progress bar:
+  - Shows how many prefixes checked, percent complete, subdomains found, and ETA.
+  - Press Ctrl+C at any time to stop brute-forcing and keep the subdomains found so far.
 
 ---
 
@@ -105,9 +129,11 @@ python VulnBloomXSS.py --threads 16
 - Errors are also displayed in real-time with yellow color
 
 ### Graceful Failure:
+- Network/API errors now include troubleshooting tips (check your internet connection, proxy, or firewall)
 - Network timeouts won't crash the scan
 - Invalid URLs are skipped automatically
 - Playwright errors are handled gracefully
+- Clean exit on Ctrl+C at menu or during DNS brute-force
 
 ### Error Summary:
 - Total errors are counted and reported
