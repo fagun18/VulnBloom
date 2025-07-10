@@ -739,6 +739,14 @@ def enumerate_subdomains(domain):
     # Add the main domain
     all_subdomains.add(domain)
     
+    # Ask user if they want to run DNS brute-force
+    try:
+        dns_brute = input(Fore.YELLOW + 'Do you want to run DNS brute-force subdomain enumeration? (y/n): ' + Fore.RESET).strip().lower()
+    except KeyboardInterrupt:
+        print(Fore.CYAN + '\n[!] Exiting. Goodbye!' + Fore.RESET)
+        sys.exit(0)
+    run_dns_brute = dns_brute == 'y'
+
     # Try each source with better error handling
     sources = [
         ("Amass", lambda: enumerate_subdomains_amass(domain)),
@@ -751,8 +759,9 @@ def enumerate_subdomains(domain):
         ("CertSpotter", lambda: enumerate_subdomains_certspotter(domain)),
         ("BufferOver", lambda: enumerate_subdomains_bufferover(domain)),
         ("AnubisDB", lambda: enumerate_subdomains_anubisdb(domain)),
-        ("DNS brute-force", lambda: enumerate_subdomains_dns(domain))
     ]
+    if run_dns_brute:
+        sources.append(("DNS brute-force", lambda: enumerate_subdomains_dns(domain)))
     
     for source_name, source_func in sources:
         try:
@@ -766,16 +775,13 @@ def enumerate_subdomains(domain):
             print(Fore.RED + f"  ✗ Error from {source_name}: {str(e)}" + Fore.RESET)
             print(Fore.YELLOW + f"    [!] Network or API error. Please check your internet connection or proxy settings if this persists." + Fore.RESET)
             log_error(f"Subdomain enumeration {source_name}", e)
-    
     # Filter and validate subdomains
     valid_subdomains = []
     for sub in all_subdomains:
         if is_valid_subdomain(sub, domain):
             valid_subdomains.append(sub)
-    
     if not valid_subdomains:
         print(Fore.RED + "[!] No subdomains found from any source. Please check your network connection, DNS, or try again later." + Fore.RESET)
-    
     return sorted(set(valid_subdomains))
 
 def fetch_wayback_urls(domain):
