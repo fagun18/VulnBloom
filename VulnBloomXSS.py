@@ -1216,37 +1216,36 @@ def main(max_workers=8):
     # Main menu
     while True:
         print(Fore.MAGENTA + "\n==== VulnBloom Main Menu ====" + Fore.RESET)
-        print("1. Resume previous scan")
-        print("2. Start new scan")
-        print("3. Update Tool")
-        print("4. Exit")
-        choice = input("Enter choice (1/2/3/4): ").strip()
-        if choice == '1' and os.path.exists(STATE_FILE):
-            state = load_scan_state()
-            print(Fore.CYAN + '[+] Resuming previous scan...' + Fore.RESET)
-            break
-        elif choice == '2':
-            clear_scan_state()
-            print(Fore.CYAN + '[+] Starting new scan...' + Fore.RESET)
-            state = None
-            break
-        elif choice == '3':
-            print(Fore.CYAN + '[+] Updating tool from git...' + Fore.RESET)
-            try:
-                result = subprocess.run(['git', 'pull'], capture_output=True, text=True)
-                print(result.stdout)
-                if result.stderr:
-                    print(Fore.YELLOW + result.stderr + Fore.RESET)
-                print(Fore.CYAN + '[+] Restarting tool...' + Fore.RESET)
-                python = sys.executable
-                os.execl(python, python, *sys.argv)
-            except Exception as e:
-                print(Fore.RED + f'[!] Update failed: {e}' + Fore.RESET)
-        elif choice == '4':
-            print(Fore.CYAN + 'Exiting. Goodbye!' + Fore.RESET)
+        print("1. Start new scan")
+        print("2. Update Tool")
+        print("3. Exit")
+        try:
+            choice = input("Enter choice (1/2/3): ").strip()
+            if choice == '1':
+                clear_scan_state()
+                print(Fore.CYAN + '[+] Starting new scan...' + Fore.RESET)
+                state = None
+                break
+            elif choice == '2':
+                print(Fore.CYAN + '[+] Updating tool from git...' + Fore.RESET)
+                try:
+                    result = subprocess.run(['git', 'pull'], capture_output=True, text=True)
+                    print(result.stdout)
+                    if result.stderr:
+                        print(Fore.YELLOW + result.stderr + Fore.RESET)
+                    print(Fore.CYAN + '[+] Restarting tool...' + Fore.RESET)
+                    python = sys.executable
+                    os.execl(python, python, *sys.argv)
+                except Exception as e:
+                    print(Fore.RED + f'[!] Update failed: {e}' + Fore.RESET)
+            elif choice == '3':
+                print(Fore.CYAN + 'Exiting. Goodbye!' + Fore.RESET)
+                sys.exit(0)
+            else:
+                print(Fore.YELLOW + '[!] Invalid choice.' + Fore.RESET)
+        except KeyboardInterrupt:
+            print(Fore.CYAN + '\n[!] Exiting. Goodbye!' + Fore.RESET)
             sys.exit(0)
-        else:
-            print(Fore.YELLOW + '[!] Invalid choice or no previous scan to resume.' + Fore.RESET)
 
     if state:
         # Load previous state
